@@ -16,9 +16,7 @@ app.setStyleSheet("""
         font-size: 14px;
     }
     QLabel {
-    
         font-weight: bold;
-
     }
 """)
 
@@ -47,17 +45,17 @@ scanButton = QPushButton('Scan')
 submitButton = QPushButton('Submit')
 nextButton = QPushButton('Next')
 
-currentStatus = "" #fetched from API
+currentStatus = "Safe" #fetched from API
 currentLocation = "" #fetched from API
 
-inTransitFromLabel = QLabel(currentLocation)
+inTransitFromLabel = QLabel(currentStatus)
 loginMessage = QLabel('Logged in as Guard#420')
 setStatusMessage = QLabel('Set Status: ')
 
 
 layout.addWidget(loginButton)
 Window.setLayout(layout)
-Window.setFixedSize(250, 250)
+Window.setFixedSize(320, 570)
 Window.show()
 
 def login():
@@ -120,12 +118,13 @@ def checkData():
         layout.addWidget(QLabel('From: '))
         layout.addWidget(inTransitFromLabel)
         layout.addWidget(QLabel('To: '))
-        createInTransitDropDown()
         layout.addWidget(inTransitToDropDownBox)
-        layout.addWidget(updateLocationDropDownBox)
+        createInTransitDropDown()
+        layout.addWidget(submitButton)
     elif(currentStatusDropDownBox.currentText() == 'Counting'):
         layout.addWidget(QLabel('Amount: '))
         layout.addWidget(QTextEdit())
+        layout.addWidget(submitButton)
         
     
 def updateLocation(index):
@@ -134,9 +133,13 @@ def updateLocation(index):
 
 def nextButtonClicked():
     checkData()
-    createUpdateLocationDropDown()
-    layout.addWidget(updateLocationDropDownBox)
-    layout.addWidget(submitButton)
+    if(currentStatusDropDownBox.currentText() == 'In Transit' or currentStatusDropDownBox.currentText() == 'Counting'):
+        pass
+    else:
+        createUpdateLocationDropDown()
+        layout.addWidget(QLabel('Set Location: '))
+        layout.addWidget(updateLocationDropDownBox)
+        layout.addWidget(submitButton)
 
 def removeWidgets():
     for i in reversed(range(layout.count())): 
