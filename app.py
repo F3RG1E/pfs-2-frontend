@@ -15,6 +15,11 @@ app.setStyleSheet("""
         font-family: Arial;
         font-size: 14px;
     }
+    QLabel {
+    
+        font-weight: bold;
+
+    }
 """)
 
 
@@ -23,8 +28,12 @@ app.setStyle('Fusion')
 Window = QWidget()
 layout = QVBoxLayout()
 
-username_line = QLineEdit('Username')
-password_line = QLineEdit('Password')
+username_line = QLineEdit()
+username_line.setPlaceholderText('Enter Username')
+
+password_line = QLineEdit()
+password_line.setPlaceholderText('Enter Password')
+
 
 layout.addWidget(username_line)
 layout.addWidget(password_line)
