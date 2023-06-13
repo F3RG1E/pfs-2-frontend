@@ -1,6 +1,17 @@
 from PyQt5.QtWidgets import *
-
 app = QApplication([])
+
+app.setStyleSheet("""
+    QPushButton {
+        background-color: #2a2a2a;
+        color: #ffffff;
+    }
+    QPushButton:hover {
+        background-color: #404040;
+    }
+""")
+
+
 app.setStyle('Fusion')
 
 Window = QWidget()
@@ -109,7 +120,7 @@ def updateLocation(index):
 def nextButtonClicked():
     checkData()
     createUpdateLocationDropDown()
-    
+    layout.addWidget(updateLocationDropDownBox)
     layout.addWidget(submitButton)
 
 def removeWidgets():
