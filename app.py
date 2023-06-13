@@ -5,9 +5,15 @@ app.setStyleSheet("""
     QPushButton {
         background-color: #2a2a2a;
         color: #ffffff;
+        font-family: Arial;
+        font-size: 14px;
     }
     QPushButton:hover {
         background-color: #404040;
+    }
+    QLabel, QLineEdit, QComboBox, QTextEdit {
+        font-family: Arial;
+        font-size: 14px;
     }
 """)
 
