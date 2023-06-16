@@ -171,15 +171,9 @@ def submitButtonClicked():
     removeWidgets()
     layout.addWidget(scanButton)
 
-
-def updateStatus(index):
-    global currentLocation
-    currentLocation = currentStatusDropDownBox.itemText(index)
-
 loginButton.clicked.connect(login)
 nextButton.clicked.connect(nextButtonClicked)
 submitButton.clicked.connect(submitButtonClicked)
 updateLocationDropDownBox.currentIndexChanged.connect(updateLocation)
-currentStatusDropDownBox.currentIndexChanged.connect(updateStatus)
 
 app.exec_()

@@ -50,7 +50,6 @@ password_line.setPlaceholderText('Enter Password')
 layout.addWidget(username_line)
 layout.addWidget(password_line)
 
-currentStatusDropDownBox = QComboBox()
 updateLocationDropDownBox = QComboBox()
 inTransitToDropDownBox = QComboBox()
 boxIdDropDownBox = QComboBox()
@@ -58,7 +57,6 @@ boxIdDropDownBox = QComboBox()
 loginButton = QPushButton('Login')
 scanButton = QPushButton('Scan')
 submitButton = QPushButton('Submit')
-nextButton = QPushButton('Next')
 searchButton = QPushButton('Search')
 
 currentStatus = "Safe" #fetched from API
@@ -66,7 +64,6 @@ currentLocation = "" #fetched from API
 
 inTransitFromLabel = QLabel(currentStatus)
 loginMessage = QLabel('Logged in as Admin')
-setStatusMessage = QLabel('Set Status: ')
 
 
 layout.addWidget(loginButton)
@@ -89,14 +86,6 @@ def login():
     tab1.layout.addWidget(loginMessage)
     tab1.layout.addWidget(loginMessage)
     tab1.layout.addWidget(scanButton)
-    tab1.layout.addWidget(setStatusMessage)
-    tab1.layout.addWidget(currentStatusDropDownBox)
-    createStatusDropDown()
-    tab1.layout.addWidget(nextButton)
-
-def createStatusDropDown():
-    # will always be these values
-    currentStatusDropDownBox.addItems(['Idle','Table', 'Ready For Job'])
 
 def createInTransitDropDown():
     # will fetch data from API and add options of all available locations
@@ -109,7 +98,7 @@ def createInTransitDropDown():
         inTransitToDropDownBox.addItem('Ready For Job')
 
 def createUpdateLocationDropDown():
-    if(currentStatusDropDownBox.currentText()  == 'Ready For Job'):
+    if(currentStatus  == 'Ready For Job'):
         updateLocationDropDownBox.clear()
         updateLocationDropDownBox.addItems(['Table 1', 'Table 2', 'Table 3'])
     elif(inTransitFromLabel.text() == 'Idle'):
@@ -117,14 +106,14 @@ def createUpdateLocationDropDown():
         inTransitToDropDownBox.addItem('Ready For Job')
 
 def checkData():
-    if(currentStatusDropDownBox.currentText() == 'In Transit'):
+    if(currentStatus == 'In Transit'):
         layout.addWidget(QLabel('From: '))
         layout.addWidget(inTransitFromLabel)
         layout.addWidget(QLabel('To: '))
         layout.addWidget(inTransitToDropDownBox)
         createInTransitDropDown()
         layout.addWidget(submitButton)
-    elif(currentStatusDropDownBox.currentText() == 'Counting'):
+    elif(currentStatus == 'Counting'):
         layout.addWidget(QLabel('Amount: '))
         layout.addWidget(QTextEdit())
         layout.addWidget(submitButton)
@@ -133,16 +122,6 @@ def checkData():
 def updateLocation(index):
     global currentLocation
     currentLocation = updateLocationDropDownBox.itemText(index)
-
-def nextButtonClicked():
-    checkData()
-    if(currentStatusDropDownBox.currentText() == 'In Transit' or currentStatusDropDownBox.currentText() == 'Counting'):
-        pass
-    else:
-        createUpdateLocationDropDown()
-        layout.addWidget(QLabel('Set Location: '))
-        layout.addWidget(updateLocationDropDownBox)
-        layout.addWidget(submitButton)
 
 def removeWidgets():
     for i in reversed(range(layout.count())): 
@@ -157,19 +136,10 @@ def submitButtonClicked():
     removeWidgets()
     layout.addWidget(loginMessage)
     layout.addWidget(scanButton)
-    layout.addWidget(setStatusMessage)
-    layout.addWidget(currentStatusDropDownBox)
-    layout.addWidget(nextButton)
 
-
-def updateStatus(index):
-    global currentLocation
-    currentLocation = currentStatusDropDownBox.itemText(index)
 
 loginButton.clicked.connect(login)
-nextButton.clicked.connect(nextButtonClicked)
 submitButton.clicked.connect(submitButtonClicked)
 updateLocationDropDownBox.currentIndexChanged.connect(updateLocation)
-currentStatusDropDownBox.currentIndexChanged.connect(updateStatus)
 
 app.exec_()
