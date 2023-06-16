@@ -100,6 +100,7 @@ username_line.setPlaceholderText('Enter Username')
 
 password_line = QLineEdit()
 password_line.setPlaceholderText('Enter Password')
+password_line.setEchoMode(QLineEdit.Password)
 
 
 layout.addWidget(username_line)
@@ -114,10 +115,6 @@ scanButton = QPushButton('Scan')
 submitButton = QPushButton('Submit')
 searchButton = QPushButton('Search')
 
-currentStatus = "Safe" #fetched from API
-currentLocation = "" #fetched from API
-
-inTransitFromLabel = QLabel(currentStatus)
 loginMessage = QLabel('Logged in as Admin')
 
 
@@ -128,6 +125,16 @@ Window.show()
 
 # boxes tab
 boxes_table = None
+
+def search_location_by_id(data, location_id):
+    for location in data:
+        if location['location_id'] == location_id:
+            return location['location_name']+location['location_id']
+        elif location_id=="1":
+            return "idle"
+        elif location_id=="2":
+            return "ready"
+    return "Null"
 
 def get_boxes_data():
     global boxes_table
@@ -146,9 +153,15 @@ def get_boxes_data():
     headers = list(records[0].keys())
     boxes_table.setHorizontalHeaderLabels(headers)
 
+    location_names = getReq("locations", True)
+
     for row, record in enumerate(records):
         for col, value in enumerate(record.values()):
-            item = QTableWidgetItem(str(value))
+            if col == 1:  # Assuming 'current_location' is always at index 1
+                location_name= search_location_by_id(location_names,value)
+                item = QTableWidgetItem(str(location_name))
+            else:
+                item = QTableWidgetItem(str(value))
             boxes_table.setItem(row, col, item)
     boxes_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
     tab7.layout.addWidget(boxes_table)
