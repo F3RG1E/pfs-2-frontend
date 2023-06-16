@@ -11,23 +11,26 @@ REFRESH_TOKEN = None
 RFID = ''
 
 
-def getDaMoneyBock(endpoint, headers):
+def getDaMoneyBock(endpoint):
     
-    if headers == True:
-        headers = {
-            "authorization" : "Bearer "+ ACCESS_TOKEN, 
-            "accept": "application/json"
 
-        }
-
-    response = requests.get(API+"/"+endpoint, headers=headers)
+    response = requests.get(API+"/"+endpoint)
 
     if response.status_code == 200:
         result = response.json()  
         return result
     else:
         print('Error:', response.status_code)
+print(getDaMoneyBock("moneyboxes"))
+MoneyMoneyMoney = getDaMoneyBock("moneyboxes")
+print(getDaMoneyBock("moneyboxes"))
+list = []
+for item in MoneyMoneyMoney:
+    list.append((str(item['RFID'])))
 
+random_index = random.randint(0, len(list) - 1)
+RFID = list[random_index]
+print(RFID)
 
 
 
@@ -171,17 +174,6 @@ def login():
         
         removeWidgets()
         layout.addWidget(scanButton)
-        MoneyMoneyMoney = getDaMoneyBock("moneyboxes", True)
-        list = []
-        
-        
-        for item in MoneyMoneyMoney:
-            random_index = random.randint(0, len(MoneyMoneyMoney) - 1)
-            list.append((str(item['RFID'])))
-
-
-        global RFID
-        RFID = list[random_index]
     
 def updateLocation(index):
     global currentLocation
@@ -203,8 +195,8 @@ def submitButtonClicked():
             "location_id" : optionsDropDownBox.currentText().split(', ')[1],
             "location_status" : statusValue
         }
-        
-        putReq(json.dumps(data), "location/"+RFID,True)
+        print(data)
+        updateInfo = putReq(json.dumps(data), "location/"+RFID,True)
         removeWidgets()
         layout.addWidget(scanButton)
 
@@ -246,7 +238,7 @@ def anotherButtonClicked():
     dataForCount = {
         "value_at_end": amountField.text()
     }
-    
+    print(dataForCount)
     putReq(json.dumps(dataForCount), "count/"+RFID,True)
     removeWidgets()
     layout.addWidget(scanButton)
