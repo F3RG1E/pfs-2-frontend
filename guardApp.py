@@ -1,7 +1,5 @@
 from PyQt5.QtWidgets import *
 import requests
-import json
-
 
 
 API = "http://127.0.0.1:8000"
@@ -19,39 +17,6 @@ def postReq(data, endpoint, headers):
 
         }
     response = requests.post(API+"/"+endpoint, data=data, headers=headers)
-
-    if response.status_code == 200:
-        result = response.json()  
-        return result
-    else:
-        print('Error:', response.status_code)
-
-def getReq(endpoint, headers):
-    
-    if headers == True:
-        headers = {
-            "authorization" : "Bearer "+ ACCESS_TOKEN, 
-            "accept": "application/json"
-
-        }
-    response = requests.get(API+"/"+endpoint, headers=headers)
-
-    if response.status_code == 200:
-        result = response.json()  
-        return result
-    else:
-        print('Error:', response.status_code)
-
-
-def putReq(data, endpoint, headers):
-    
-    if headers == True:
-        headers = {
-            "authorization" : "Bearer "+ ACCESS_TOKEN, 
-            "accept": "application/json"
-
-        }
-    response = requests.put(API+"/"+endpoint, data=data, headers=headers)
 
     if response.status_code == 200:
         result = response.json()  
@@ -104,7 +69,6 @@ password_line.setPlaceholderText('Enter Password')
 
 layout.addWidget(username_line)
 layout.addWidget(password_line)
-statusValue = ""
 
 currentStatusDropDownBox = QComboBox()
 updateLocationDropDownBox = QComboBox()
@@ -113,9 +77,13 @@ inTransitToDropDownBox = QComboBox()
 loginButton = QPushButton('Login')
 scanButton = QPushButton('Scan')
 submitButton = QPushButton('Submit')
-changeStatusToIn = QPushButton('In')
-changeStatusToOut = QPushButton('Out')
-optionsDropDownBox = QComboBox()
+nextButton = QPushButton('Next')
+
+currentStatus = "Safe" #fetched from API
+currentLocation = "" #fetched from API
+
+inTransitFromLabel = QLabel(currentStatus)
+setStatusMessage = QLabel('Set Status: ')
 
 
 layout.addWidget(loginButton)
@@ -135,17 +103,60 @@ def login():
         }
 
         tokens = postReq(data, "login", False)
-        global ACCESS_TOKEN 
         ACCESS_TOKEN = tokens["access_token"]
-        global REFRESH_TOKEN 
         REFRESH_TOKEN = tokens["refresh_token"]
         
         removeWidgets()
         layout.addWidget(scanButton)
+
+def createInTransitDropDown():
+    # will fetch data from API and add options of all available locations
+    # will prefill from location as current location of box
+    if(inTransitFromLabel.text() == 'Safe'):
+        inTransitToDropDownBox.clear()
+        inTransitToDropDownBox.addItems(['Truck 1', 'Truck 2', 'Truck 3'])
+    elif(inTransitFromLabel.text() == 'Truck'):
+        inTransitToDropDownBox.clear()
+        inTransitToDropDownBox.addItems(['Bank 1', 'Bank 2', 'Bank 3'])
+    elif(inTransitFromLabel.text() == 'Bank'):
+        inTransitToDropDownBox.clear()
+        inTransitToDropDownBox.addItem('Counting')
+    elif(inTransitFromLabel.text() == 'Counting'):
+        inTransitToDropDownBox.clear()
+        inTransitToDropDownBox.addItem('Ready For Job')
+    elif(inTransitFromLabel.text() == 'Ready For Job'):
+        inTransitToDropDownBox.clear()
+        inTransitToDropDownBox.addItems(['Table 1', 'Table 2', 'Table 3'])
+    elif(inTransitFromLabel.text() == 'Table'):
+        inTransitToDropDownBox.clear()
+        inTransitToDropDownBox.addItems(['Safe 1', 'Safe 2', 'Safe 3'])
+
+def checkData():
+    if(currentStatus == 'In Transit'):
+        layout.addWidget(QLabel('From: '))
+        layout.addWidget(inTransitFromLabel)
+        layout.addWidget(QLabel('To: '))
+        layout.addWidget(inTransitToDropDownBox)
+        createInTransitDropDown()
+        layout.addWidget(submitButton)
+    elif(currentStatus == 'Counting'):
+        layout.addWidget(QLabel('Amount: '))
+        layout.addWidget(QTextEdit())
+        layout.addWidget(submitButton)
+        
     
 def updateLocation(index):
     global currentLocation
     currentLocation = updateLocationDropDownBox.itemText(index)
+
+def nextButtonClicked():
+    checkData()
+    if(currentStatus == 'In Transit' or currentStatus == 'Counting'):
+        pass
+    else:
+        layout.addWidget(QLabel('Set Location: '))
+        layout.addWidget(updateLocationDropDownBox)
+        layout.addWidget(submitButton)
 
 def removeWidgets():
     for i in reversed(range(layout.count())): 
@@ -156,47 +167,13 @@ def removeWidgets():
         widgetToRemove.setParent(None)
 
 def submitButtonClicked():
-
-    data = {
-        
-        "location_id" : optionsDropDownBox.currentText().split(', ')[1],
-        "location_status" : statusValue
-    }
-    updateInfo = putReq(json.dumps(data), "location/df8deb84-fb34-4f54-be0c-e41684b9092e",True)
+    #Sends updatedStatus and UpdatedLocation + Amount if applicable to API
     removeWidgets()
     layout.addWidget(scanButton)
 
-def scanButtonClicked():
-    global moneybox
-    moneybox = getReq("scan/df8deb84-fb34-4f54-be0c-e41684b9092e",True)
-    removeWidgets()
-    moneyBoxStatusLabel = QLabel(moneybox['location_status'] + " " + moneybox['current_location'])
-    layout.addWidget(moneyBoxStatusLabel)
-    
-    optionsReq = getReq("locations", True)
-    optionsDropDownBox.clear()
-    for item in optionsReq:
-        optionsDropDownBox.addItem((str(item['location_name']) + ", " + str(item['location_id'])))
-
-    layout.addWidget(changeStatusToIn)
-    layout.addWidget(changeStatusToOut)
-    layout.addWidget(optionsDropDownBox)
-    layout.addWidget(submitButton)
-
-def toOutClicked():
-    global statusValue
-    statusValue = "out"
-
-def toInClicked():
-    global statusValue
-    statusValue = "in"
-    
-
 loginButton.clicked.connect(login)
-scanButton.clicked.connect(scanButtonClicked)
+nextButton.clicked.connect(nextButtonClicked)
 submitButton.clicked.connect(submitButtonClicked)
-changeStatusToOut.clicked.connect(toOutClicked)
-changeStatusToIn.clicked.connect(toInClicked)
 updateLocationDropDownBox.currentIndexChanged.connect(updateLocation)
 
 app.exec_()
