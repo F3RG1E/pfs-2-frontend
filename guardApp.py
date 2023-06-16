@@ -1,12 +1,38 @@
 from PyQt5.QtWidgets import *
 import requests
 import json
+import random
 
 
 
 API = "http://127.0.0.1:8000"
 ACCESS_TOKEN = None
 REFRESH_TOKEN = None
+RFID = ''
+
+
+def getDaMoneyBock(endpoint):
+    
+
+    response = requests.get(API+"/"+endpoint)
+
+    if response.status_code == 200:
+        result = response.json()  
+        return result
+    else:
+        print('Error:', response.status_code)
+print(getDaMoneyBock("moneyboxes"))
+MoneyMoneyMoney = getDaMoneyBock("moneyboxes")
+print(getDaMoneyBock("moneyboxes"))
+list = []
+for item in MoneyMoneyMoney:
+    list.append((str(item['RFID'])))
+
+random_index = random.randint(0, len(list) - 1)
+RFID = list[random_index]
+print(RFID)
+
+
 
 
 # Make a POST request to the API
@@ -95,6 +121,9 @@ app.setStyle('Fusion')
 Window = QWidget()
 layout = QVBoxLayout()
 
+
+
+
 username_line = QLineEdit()
 username_line.setPlaceholderText('Enter Username')
 
@@ -116,6 +145,9 @@ submitButton = QPushButton('Submit')
 changeStatusToIn = QPushButton('In')
 changeStatusToOut = QPushButton('Out')
 optionsDropDownBox = QComboBox()
+anotherButton = QPushButton('Submit')
+
+amountField = QLineEdit()
 
 
 layout.addWidget(loginButton)
@@ -156,19 +188,30 @@ def removeWidgets():
         widgetToRemove.setParent(None)
 
 def submitButtonClicked():
+    if moneybox['current_location'] != '4':
 
-    data = {
+        data = {
         
-        "location_id" : optionsDropDownBox.currentText().split(', ')[1],
-        "location_status" : statusValue
-    }
-    updateInfo = putReq(json.dumps(data), "location/df8deb84-fb34-4f54-be0c-e41684b9092e",True)
-    removeWidgets()
-    layout.addWidget(scanButton)
+            "location_id" : optionsDropDownBox.currentText().split(', ')[1],
+            "location_status" : statusValue
+        }
+        print(data)
+        updateInfo = putReq(json.dumps(data), "location/"+RFID,True)
+        removeWidgets()
+        layout.addWidget(scanButton)
 
+    else:
+        isCounting()
+
+
+def isCounting():
+    removeWidgets()
+    layout.addWidget(QLabel("Enter Counted Amount: "))
+    layout.addWidget(amountField)
+    layout.addWidget(anotherButton)
 def scanButtonClicked():
     global moneybox
-    moneybox = getReq("scan/df8deb84-fb34-4f54-be0c-e41684b9092e",True)
+    moneybox = getReq("scan/"+RFID,True)
     removeWidgets()
     moneyBoxStatusLabel = QLabel(moneybox['location_status'] + " " + moneybox['current_location'])
     layout.addWidget(moneyBoxStatusLabel)
@@ -190,10 +233,23 @@ def toOutClicked():
 def toInClicked():
     global statusValue
     statusValue = "in"
+
+def anotherButtonClicked():
+    dataForCount = {
+        "value_at_end": amountField.text()
+    }
+    print(dataForCount)
+    putReq(json.dumps(dataForCount), "count/"+RFID,True)
+    removeWidgets()
+    layout.addWidget(scanButton)
+
+
+
     
 
 loginButton.clicked.connect(login)
 scanButton.clicked.connect(scanButtonClicked)
+anotherButton.clicked.connect(anotherButtonClicked)
 submitButton.clicked.connect(submitButtonClicked)
 changeStatusToOut.clicked.connect(toOutClicked)
 changeStatusToIn.clicked.connect(toInClicked)
