@@ -1,5 +1,6 @@
 # venv
 /pfs-2
+/pfs-2-frontend
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
