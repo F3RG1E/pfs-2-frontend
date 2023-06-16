@@ -1,24 +1,57 @@
 from PyQt5.QtWidgets import *
+import requests
+
+
+API = "http://127.0.0.1:8000"
+ACCESS_TOKEN = None
+REFRESH_TOKEN = None
+
+
+# Make a POST request to the API
+def postReq(data, endpoint, headers):
+    
+    if headers == True:
+        headers = {
+            "authorization" : "Bearer "+ ACCESS_TOKEN, 
+            "accept": "application/json"
+
+        }
+    response = requests.post(API+"/"+endpoint, data=data, headers=headers)
+
+    if response.status_code == 200:
+        result = response.json()  
+        return result
+    else:
+        print('Error:', response.status_code)
+
 
 app = QApplication([])
 
 app.setStyleSheet("""
     QPushButton {
-        background-color: #2a2a2a;
+        background-color: #337ab7;
         color: #ffffff;
-        font-family: Arial;
-        font-size: 14px;
+        padding: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        border: none;
     }
     QPushButton:hover {
-        background-color: #404040;
+        background-color: #23527c;
     }
     QLabel, QLineEdit, QComboBox, QTextEdit {
-        font-family: Arial;
-        font-size: 14px;
+        background-color: #ffffff;
+            border: 1px solid #cccccc;
+            padding: 6px;
+            font-size: 16px;
+            color: #333333;
     }
     QLabel {
         font-weight: bold;
     }
+    QMainWindow {
+            background-color: #f2f2f2;
+        }
 """)
 
 
@@ -50,7 +83,6 @@ currentStatus = "Safe" #fetched from API
 currentLocation = "" #fetched from API
 
 inTransitFromLabel = QLabel(currentStatus)
-loginMessage = QLabel('Logged in as Guard#420')
 setStatusMessage = QLabel('Set Status: ')
 
 
@@ -58,19 +90,24 @@ layout.addWidget(loginButton)
 Window.setLayout(layout)
 Window.setFixedSize(320, 570)
 Window.show()
+wrongDeats = QLabel("You must Enter Values")
 
 def login():
-    removeWidgets()
-    layout.addWidget(loginMessage)
-    layout.addWidget(scanButton)
-    layout.addWidget(setStatusMessage)
-    layout.addWidget(currentStatusDropDownBox)
-    createStatusDropDown()
-    layout.addWidget(nextButton)
+    if(username_line.text() == "" or password_line.text() == ""):
+        layout.addWidget(wrongDeats)
+    else:
+        layout.removeWidget(wrongDeats)
+        data = {
+            'username': username_line.text(),
+            'password': password_line.text()
+        }
 
-def createStatusDropDown():
-    # will always be these values
-    currentStatusDropDownBox.addItems(['Table', 'Safe', 'Truck', 'Bank', 'In Transit', 'Counting', 'Ready For Job'])
+        tokens = postReq(data, "login", False)
+        ACCESS_TOKEN = tokens["access_token"]
+        REFRESH_TOKEN = tokens["refresh_token"]
+        
+        removeWidgets()
+        layout.addWidget(scanButton)
 
 def createInTransitDropDown():
     # will fetch data from API and add options of all available locations
@@ -94,35 +131,15 @@ def createInTransitDropDown():
         inTransitToDropDownBox.clear()
         inTransitToDropDownBox.addItems(['Safe 1', 'Safe 2', 'Safe 3'])
 
-def createUpdateLocationDropDown():
-    if(currentStatusDropDownBox.currentText() == 'Safe'):
-        updateLocationDropDownBox.clear()
-        updateLocationDropDownBox.addItems(['Truck 1', 'Truck 2', 'Truck 3'])
-    elif(currentStatusDropDownBox.currentText() == 'Truck'):
-        updateLocationDropDownBox.clear()
-        updateLocationDropDownBox.addItems(['Bank 1', 'Bank 2', 'Bank 3'])
-    elif(currentStatusDropDownBox.currentText() == 'Bank'):
-        updateLocationDropDownBox.clear()
-        updateLocationDropDownBox.addItem('Counting')
-    elif(currentStatusDropDownBox.currentText()  == 'Counting'):
-        updateLocationDropDownBox.clear()
-        updateLocationDropDownBox.addItem('Ready For Job')
-    elif(currentStatusDropDownBox.currentText()  == 'Ready For Job'):
-        updateLocationDropDownBox.clear()
-        updateLocationDropDownBox.addItems(['Table 1', 'Table 2', 'Table 3'])
-    elif(currentStatusDropDownBox.currentText()  == 'Table'):
-        updateLocationDropDownBox.clear()
-        updateLocationDropDownBox.addItems(['Safe 1', 'Safe 2', 'Safe 3'])
-
 def checkData():
-    if(currentStatusDropDownBox.currentText() == 'In Transit'):
+    if(currentStatus == 'In Transit'):
         layout.addWidget(QLabel('From: '))
         layout.addWidget(inTransitFromLabel)
         layout.addWidget(QLabel('To: '))
         layout.addWidget(inTransitToDropDownBox)
         createInTransitDropDown()
         layout.addWidget(submitButton)
-    elif(currentStatusDropDownBox.currentText() == 'Counting'):
+    elif(currentStatus == 'Counting'):
         layout.addWidget(QLabel('Amount: '))
         layout.addWidget(QTextEdit())
         layout.addWidget(submitButton)
@@ -134,10 +151,9 @@ def updateLocation(index):
 
 def nextButtonClicked():
     checkData()
-    if(currentStatusDropDownBox.currentText() == 'In Transit' or currentStatusDropDownBox.currentText() == 'Counting'):
+    if(currentStatus == 'In Transit' or currentStatus == 'Counting'):
         pass
     else:
-        createUpdateLocationDropDown()
         layout.addWidget(QLabel('Set Location: '))
         layout.addWidget(updateLocationDropDownBox)
         layout.addWidget(submitButton)
@@ -153,11 +169,7 @@ def removeWidgets():
 def submitButtonClicked():
     #Sends updatedStatus and UpdatedLocation + Amount if applicable to API
     removeWidgets()
-    layout.addWidget(loginMessage)
     layout.addWidget(scanButton)
-    layout.addWidget(setStatusMessage)
-    layout.addWidget(currentStatusDropDownBox)
-    layout.addWidget(nextButton)
 
 
 def updateStatus(index):
