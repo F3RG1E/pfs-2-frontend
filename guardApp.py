@@ -125,6 +125,7 @@ username_line.setPlaceholderText('Enter Username')
 
 password_line = QLineEdit()
 password_line.setPlaceholderText('Enter Password')
+password_line.setEchoMode(QLineEdit.Password)
 
 
 layout.addWidget(username_line)
